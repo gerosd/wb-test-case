@@ -1,0 +1,38 @@
+.leftPanel {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 300px;
+    height: 100vh;
+    background-color: var(--accent-color);
+    padding: 20px;
+}
+
+.leftPanel h1 {
+    text-align: center;
+}
+
+.panelContent {
+    margin-block: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.contentButton {
+    text-align: center;
+    padding-inline: 5px;
+    padding-block: 10px;
+    width: 100%;
+    border: 1px solid var(--text-color);
+    border-radius: 15px;
+    font-size: 1.25em;
+}
+
+.contentButton:hover {
+    border-radius: 0;
+}
+
+.contentButton + .activePage {
+    background-color: var(--accent-color);
+}
