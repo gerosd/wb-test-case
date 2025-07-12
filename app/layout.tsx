@@ -21,7 +21,7 @@ export default function RootLayout({
     return (
         <html lang="ru">
             <body className={monserrat.className}>
-                <LeftPanel />
+                <LeftPanel/>
                 {children}
             </body>
         </html>

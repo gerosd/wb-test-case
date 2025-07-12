@@ -6,6 +6,7 @@
     height: 100vh;
     background-color: var(--accent-color);
     padding: 20px;
+    flex-shrink: 0;
 }
 
 .leftPanel h1 {
@@ -31,8 +32,4 @@
 
 .contentButton:hover {
     border-radius: 0;
-}
-
-.contentButton + .activePage {
-    background-color: var(--accent-color);
 }
