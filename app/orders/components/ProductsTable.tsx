@@ -1,9 +1,10 @@
 'use client'
 import styles from '../orders.module.css';
-import React, { useState, useEffect, useCallback, useMemo, memo } from 'react'
+import React, {useState, useEffect, useCallback, useMemo, memo} from 'react'
 import { fetchOrders } from '@/lib/api/wbOrders';
 import { Order } from "@/lib/types/orders";
 import { getCache, setCache } from '@/lib/db';
+import SearchField from "@/components/SearchField/SearchField";
 
 const PAGE_SIZE = 50;
 const CACHE_KEY = 'wb_orders_cache';
@@ -81,11 +82,59 @@ TableHeader.displayName = 'TableHeader';
 
 export default function OrdersTable() {
     const [allOrders, setAllOrders] = useState<Order[]>([]);
+    const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
     const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [page, setPage] = useState<number>(0);
     const [lastUpdated, setLastUpdated] = useState<string>('');
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [debouncedQuery, setDebouncedQuery] = useState<string>('');
+
+    const filterOrders = useCallback((orders: Order[], query: string): Order[] => {
+        if (!query.trim()) return orders;
+
+        const lowerQuery = query.toLowerCase().trim();
+        return orders.filter(order => {
+            return Object.values(order).some(value => {
+                if (value == null) return false;
+                return String(value).toLowerCase().includes(lowerQuery);
+            });
+        });
+    }, []);
+
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedQuery(searchQuery);
+        }, 500);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [searchQuery]);
+
+    useEffect(() => {
+        if (allOrders.length > 0) {
+            const filtered = filterOrders(allOrders, debouncedQuery);
+            setFilteredOrders(filtered);
+            setPage(0);
+        } else {
+            setFilteredOrders([]);
+            setPage(0);
+        }
+    }, [allOrders, debouncedQuery, filterOrders]);
+
+    useEffect(() => {
+        if (filteredOrders.length > 0) {
+            const endIndex = (page + 1) * PAGE_SIZE;
+            const newOrders = filteredOrders.slice(0, endIndex);
+            setDisplayedOrders(newOrders);
+            setHasMore(endIndex < filteredOrders.length);
+        } else {
+            setDisplayedOrders([]);
+            setHasMore(false);
+        }
+    }, [page, filteredOrders]);
 
     const loadData = useCallback(async () => {
         try {
@@ -94,17 +143,18 @@ export default function OrdersTable() {
 
             const cached = await getCache(CACHE_KEY);
 
-            if (cached && now - cached.timestamp < CACHE_EXPIRY_MS) {
-                setAllOrders(cached.data);
+            if (cached && cached.timestamp && now - cached.timestamp < CACHE_EXPIRY_MS) {
+                setAllOrders(cached.data || []);
                 setLastUpdated(new Date(cached.timestamp).toLocaleString());
                 return;
             }
 
-            const orders = await fetchOrders(
-                new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
-            );
+            const orders = await fetchOrders(new Date(Date.now() - 80 * 24 * 60 * 1000).toISOString());
 
-            await setCache(CACHE_KEY, orders);
+            await setCache(CACHE_KEY, {
+                data: orders,
+                timestamp: now
+            });
 
             setAllOrders(orders);
             setLastUpdated(new Date().toLocaleString());
@@ -119,31 +169,25 @@ export default function OrdersTable() {
         loadData();
     }, [loadData]);
 
-    useEffect(() => {
-        if (allOrders.length > 0) {
-            const newOrders = allOrders.slice(0, (page + 1) * PAGE_SIZE);
-            setDisplayedOrders(newOrders);
-            setHasMore(newOrders.length < allOrders.length);
-        }
-    }, [page, allOrders]);
-
     const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-        const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 50;
+        const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 100;
 
-        if (isNearBottom && !isLoading && hasMore) {
+        if (isNearBottom && !isLoading && hasMore && filteredOrders.length > 0) {
             setPage(prev => prev + 1);
         }
-    }, [isLoading, hasMore]);
+    }, [isLoading, hasMore, filteredOrders.length]);
 
     const refreshData = useCallback(async () => {
         try {
             setIsLoading(true);
-            const orders = await fetchOrders(
-                new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
-            );
+            const orders = await fetchOrders(new Date(Date.now() - 80 * 24 * 60 * 1000).toISOString());
 
-            await setCache(CACHE_KEY, orders);
+            await setCache(CACHE_KEY, {
+                data: orders,
+                timestamp: Date.now()
+            });
+
             setAllOrders(orders);
             setPage(0);
             setLastUpdated(new Date().toLocaleString());
@@ -156,6 +200,10 @@ export default function OrdersTable() {
 
     const controls = useMemo(() => (
         <div className={styles.controls}>
+            <SearchField
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+            />
             <button
                 onClick={refreshData}
                 disabled={isLoading}
@@ -169,19 +217,31 @@ export default function OrdersTable() {
                 </div>
             )}
         </div>
-    ), [isLoading, lastUpdated, refreshData]);
+    ), [isLoading, lastUpdated, refreshData, searchQuery]);
 
     const loadingIndicator = useMemo(() => (
         isLoading && <div className={styles.loading}>Загрузка...</div>
     ), [isLoading]);
 
-    const endMessage = useMemo(() => (
-        !hasMore && allOrders.length > 0 && (
-            <div className={styles.loading}>
-                Показано {displayedOrders.length} из {allOrders.length} записей
-            </div>
-        )
-    ), [hasMore, allOrders.length, displayedOrders.length]);
+    const endMessage = useMemo(() => {
+        if (filteredOrders.length === 0 && allOrders.length > 0) {
+            return (
+                <div className={styles.loading}>
+                    Ничего не найдено по запросу "{debouncedQuery}"
+                </div>
+            );
+        }
+
+        if (!hasMore && filteredOrders.length > 0) {
+            return (
+                <div className={styles.loading}>
+                    Показано {displayedOrders.length} из {filteredOrders.length} записей
+                </div>
+            );
+        }
+
+        return null;
+    }, [hasMore, filteredOrders.length, displayedOrders.length, allOrders.length, debouncedQuery]);
 
     return (
         <div className={styles.tableContainer} onScroll={handleScroll}>

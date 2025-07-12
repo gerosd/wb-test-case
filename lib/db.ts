@@ -15,25 +15,64 @@ export const initDB = () => {
 };
 
 export const getCache = async (key: string) => {
-    const db = await initDB();
-    return new Promise<any>((resolve, reject) => {
-        const transaction = db.transaction('orders', 'readonly');
-        const store = transaction.objectStore('orders');
-        const request = store.get(key);
+    try {
+        const db = await initDB();
+        return new Promise<any>((resolve, reject) => {
+            const transaction = db.transaction('orders', 'readonly');
+            const store = transaction.objectStore('orders');
+            const request = store.get(key);
 
-        request.onerror = () => reject(request.error);
-        request.onsuccess = () => resolve(request.result);
-    });
+            request.onerror = () => reject(request.error);
+            request.onsuccess = () => {
+                const result = request.result;
+                if (result) {
+                    console.log('Cache hit:', key, 'Data length:', result.data?.length || 0);
+                } else {
+                    console.log('Cache miss:', key);
+                }
+                resolve(result);
+            };
+        });
+    } catch (error) {
+        console.error('Error getting cache:', error);
+        return null;
+    }
 };
 
 export const setCache = async (key: string, data: any) => {
-    const db = await initDB();
-    return new Promise<void>((resolve, reject) => {
-        const transaction = db.transaction('orders', 'readwrite');
-        const store = transaction.objectStore('orders');
-        store.put({ cacheKey: key, data, timestamp: Date.now() });
+    try {
+        const db = await initDB();
+        return new Promise<void>((resolve, reject) => {
+            const transaction = db.transaction('orders', 'readwrite');
+            const store = transaction.objectStore('orders');
 
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
-    });
+            // ✅ Правильная структура данных для кэша
+            const cacheData = {
+                cacheKey: key,
+                ...data // Разворачиваем data, чтобы timestamp и data были на верхнем уровне
+            };
+
+            console.log('Saving to cache:', key, 'Data length:', cacheData.data?.length || 0);
+
+            const request = store.put(cacheData);
+
+            request.onerror = () => {
+                console.error('Error saving to cache:', request.error);
+                reject(request.error);
+            };
+
+            transaction.oncomplete = () => {
+                console.log('Successfully saved to cache:', key);
+                resolve();
+            };
+
+            transaction.onerror = () => {
+                console.error('Transaction error:', transaction.error);
+                reject(transaction.error);
+            };
+        });
+    } catch (error) {
+        console.error('Error setting cache:', error);
+        throw error;
+    }
 };
