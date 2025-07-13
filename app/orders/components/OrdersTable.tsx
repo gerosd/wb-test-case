@@ -1,5 +1,4 @@
 'use client'
-import styles from '../orders.module.css';
 import React, { memo, useCallback } from 'react';
 import { fetchOrders } from '@/lib/api/wbOrders';
 import { Order } from "@/lib/types/orders";
@@ -107,6 +106,7 @@ export default function OrdersTable() {
 
     return (
         <TableWrapper onScroll={handleScroll}>
+            <h1 style={{textAlign: "center"}}>Таблица заказов</h1>
             <TableControls
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -115,7 +115,7 @@ export default function OrdersTable() {
                 lastUpdated={lastUpdated}
             />
 
-            <table className={styles.ordersTable}>
+            <table>
                 <TableHeader />
                 <tbody>
                 {displayedOrders.map((order) => (

@@ -1,5 +1,4 @@
 'use client'
-import styles from '../sales.module.css';
 import React, { memo, useCallback } from 'react';
 import { fetchSales } from '@/lib/api/wbSales';
 import { Sale } from "@/lib/types/sales";
@@ -118,6 +117,7 @@ export default function SalesTable() {
 
     return (
         <TableWrapper onScroll={handleScroll}>
+            <h1 style={{textAlign: "center"}}>Таблица продаж</h1>
             <TableControls
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -126,7 +126,7 @@ export default function SalesTable() {
                 lastUpdated={lastUpdated}
             />
 
-            <table className={styles.orderTable}>
+            <table>
                 <TableHeader/>
                 <tbody>
                 {displayedSales.map((sale) => (

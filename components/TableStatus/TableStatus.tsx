@@ -54,7 +54,7 @@ export default function TableStatus({
                 <div className={styles.summary}>
                     {searchQuery ? (
                         <>
-                            `Показано {displayedCount} из {filteredCount} записей`
+                            Показано {displayedCount} из {filteredCount} записей
                             {filteredCount !== totalCount && (
                                 <span className={styles.totalCount}>
                                     {' '}(всего: {totalCount})

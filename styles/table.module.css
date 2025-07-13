@@ -1,4 +1,4 @@
-.ordersContainer {
+.tableContainer {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -8,13 +8,13 @@
     padding: 40px 40px 20px 40px;
 }
 
-.ordersTable {
+.tableContainer table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.ordersTable th,
-.ordersTable td {
+.tableContainer table th,
+.tableContainer table td {
     border: 1px solid var(--text-color);
     padding: 12px;
     text-align: left;
@@ -22,20 +22,9 @@
     font-size: 14px;
 }
 
-.ordersTable th {
+.tableContainer table th {
     position: sticky;
     top: 0;
     background-color: var(--accent-color);
     z-index: 10;
-}
-
-.refreshButton {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    outline: none;
-    background: var(--accent-color);
-    color: var(--text-color);
-    font-size: inherit;
-    cursor: pointer;
 }
