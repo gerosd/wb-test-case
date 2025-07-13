@@ -6,7 +6,6 @@ export default function LeftPanel() {
         <div className={styles.leftPanel}>
             <h1>Данные с WB</h1>
             <div className={styles.panelContent}>
-                <Link href='/products' className={styles.contentButton}>Все товары</Link>
                 <Link href='/orders' className={styles.contentButton}>Заказы</Link>
                 <Link href='/sales' className={styles.contentButton}>Продажи</Link>
             </div>

@@ -1,0 +1,33 @@
+.notFoundWrapper {
+    width: 50%;
+    height: 50%;
+    display: grid;
+    row-gap: 20px;
+    place-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid var(--text-color);
+    margin: auto;
+}
+
+.linksList {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.nfButton {
+    display: grid;
+    place-items: center;
+    padding: 10px 35px;
+    color: white;
+    border: 1px solid var(--text-color);
+    outline: none;
+    font-size: 1.25em;
+    border-radius: 15px;
+}
+
+.nfButton:hover {
+    transform: scale(1.1);
+}

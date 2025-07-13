@@ -1,23 +1,36 @@
 .searchField {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     background: white;
-    padding-right: 2px;
-    width: 50%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    width: 100%;
+    max-width: 400px;
+    transition: all 0.3s ease;
+}
+
+.searchField:focus-within {
+    border-color: #28a745;
+    box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.25);
 }
 
 .searchField input {
     border: none;
     outline: none;
     background: transparent;
-    font-size: 16px;
+    font-size: 1em;
     padding-inline: 4px;
     padding-block: 5px;
     flex: 1;
 }
 
 .searchField img {
-    cursor: pointer;
     margin-right: auto;
+}
+
+@media (max-width: 700px) {
+    .searchField {
+        width: auto;
+    }
 }
