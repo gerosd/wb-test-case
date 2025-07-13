@@ -1,3 +1,9 @@
+interface CacheEntry<T = unknown> {
+    cacheKey: string;
+    data: T;
+    timestamp: number;
+}
+
 export const initDB = () => {
     return new Promise<IDBDatabase>((resolve, reject) => {
         const request = indexedDB.open('WBCacheDB', 1);
@@ -9,20 +15,23 @@ export const initDB = () => {
             const db = (event.target as IDBOpenDBRequest).result;
 
             if (!db.objectStoreNames.contains('orders')) {
-                db.createObjectStore('orders', { keyPath: 'cacheKey' });
+                db.createObjectStore('orders', {keyPath: 'cacheKey'});
             }
 
             if (!db.objectStoreNames.contains('sales')) {
-                db.createObjectStore('sales', { keyPath: 'cacheKey' });
+                db.createObjectStore('sales', {keyPath: 'cacheKey'});
             }
         };
     });
 };
 
-export const getCache = async (key: string, storeName: string = 'orders') => {
+export const getCache = async <T = unknown>(
+    key: string,
+    storeName: string
+): Promise<CacheEntry<T> | null> => {
     try {
         const db = await initDB();
-        return new Promise<any>((resolve, reject) => {
+        return new Promise<CacheEntry<T> | null>((resolve, reject) => {
             const transaction = db.transaction(storeName, 'readonly');
             const store = transaction.objectStore(storeName);
             const request = store.get(key);
@@ -44,7 +53,11 @@ export const getCache = async (key: string, storeName: string = 'orders') => {
     }
 };
 
-export const setCache = async (key: string, data: any, storeName: string = 'orders') => {
+export const setCache = async <T = unknown>(
+    key: string,
+    data: T,
+    storeName: string
+): Promise<void> => {
     try {
         const db = await initDB();
         return new Promise<void>((resolve, reject) => {
@@ -56,7 +69,6 @@ export const setCache = async (key: string, data: any, storeName: string = 'orde
                 ...data
             };
 
-            console.log(`Saving to cache [${storeName}]:`, key, 'Data length:', cacheData.data?.length || 0);
 
             const request = store.put(cacheData);
 

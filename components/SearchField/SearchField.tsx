@@ -9,7 +9,7 @@ interface SearchFieldProps {
     onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }
 
-export default ({value, onChange}: SearchFieldProps): ReactElement => (
+const SearchField = ({ value, onChange }: SearchFieldProps): ReactElement => (
     <label htmlFor="search" className={styles.searchField}>
         <input
             type="text"
@@ -20,4 +20,7 @@ export default ({value, onChange}: SearchFieldProps): ReactElement => (
         />
         <Image src={searchIcon} alt="Search"/>
     </label>
-)
+);
+
+SearchField.displayName = 'SearchField';
+export default SearchField;

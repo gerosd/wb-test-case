@@ -1,6 +1,7 @@
 {
   "name": "wb-test-case",
   "version": "0.1.0",
+  "author": "gerosd",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

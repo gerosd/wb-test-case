@@ -26,8 +26,9 @@ export async function GET(request: Request) {
         const data: Sale[] = await res.json();
         return NextResponse.json(data);
     } catch (error) {
+        console.error("Failed to fetch sales ", error);
         return NextResponse.json(
-            { error: 'Failed to fetch orders' },
+            { error: 'Failed to fetch sales' },
             { status: 500 }
         );
     }

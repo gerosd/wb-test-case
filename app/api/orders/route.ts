@@ -26,6 +26,7 @@ export async function GET(request: Request) {
         const data: Order[] = await res.json();
         return NextResponse.json(data);
     } catch (error) {
+        console.error("Failed to fetch orders ", error)
         return NextResponse.json(
             { error: 'Failed to fetch orders' },
             { status: 500 }

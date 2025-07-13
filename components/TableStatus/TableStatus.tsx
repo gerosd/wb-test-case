@@ -32,7 +32,7 @@ export default function TableStatus({
         return (
             <div className={`${styles.status} ${className}`}>
                 <div className={styles.noResults}>
-                    Ничего не найдено по запросу "{searchQuery}"
+                    Ничего не найдено по запросу &quot;{searchQuery}&quot;
                 </div>
             </div>
         );
@@ -54,7 +54,7 @@ export default function TableStatus({
                 <div className={styles.summary}>
                     {searchQuery ? (
                         <>
-                            Показано {displayedCount} из {filteredCount} записей
+                            `Показано {displayedCount} из {filteredCount} записей`
                             {filteredCount !== totalCount && (
                                 <span className={styles.totalCount}>
                                     {' '}(всего: {totalCount})

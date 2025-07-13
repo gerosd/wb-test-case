@@ -4,7 +4,7 @@ import { getCache, setCache } from '@/lib/db';
 export interface UseTableDataOptions<T> {
     fetchFunction: () => Promise<T[]>;
     cacheKey: string;
-    storeName?: string;
+    storeName: string;
     cacheExpiryMs?: number;
     pageSize?: number;
     filterFunction?: (items: T[], query: string) => T[];
@@ -14,15 +14,12 @@ export interface UseTableDataReturn<T> {
     allItems: T[];
     filteredItems: T[];
     displayedItems: T[];
-
     isLoading: boolean;
     hasMore: boolean;
     page: number;
     lastUpdated: string;
-
     searchQuery: string;
     debouncedQuery: string;
-
     setSearchQuery: (query: string) => void;
     loadData: () => Promise<void>;
     refreshData: () => Promise<void>;
@@ -30,12 +27,12 @@ export interface UseTableDataReturn<T> {
     handleScroll: (e: React.UIEvent<HTMLDivElement>) => void;
 }
 
-const defaultFilterFunction = <T>(items: T[], query: string): T[] => {
+const defaultFilterFunction = <T,>(items: T[], query: string): T[] => {
     if (!query.trim()) return items;
 
     const lowerQuery = query.toLowerCase().trim();
     return items.filter(item => {
-        return Object.values(item as any).some(value => {
+        return Object.values(item as object).some(value => {
             if (value == null) return false;
             return String(value).toLowerCase().includes(lowerQuery);
         });
@@ -45,12 +42,11 @@ const defaultFilterFunction = <T>(items: T[], query: string): T[] => {
 export function useTableData<T>({
                                     fetchFunction,
                                     cacheKey,
-                                    storeName = 'orders',
+                                    storeName,
                                     cacheExpiryMs = 30 * 60 * 1000,
                                     pageSize = 50,
                                     filterFunction = defaultFilterFunction
                                 }: UseTableDataOptions<T>): UseTableDataReturn<T> {
-
     const [allItems, setAllItems] = useState<T[]>([]);
     const [filteredItems, setFilteredItems] = useState<T[]>([]);
     const [displayedItems, setDisplayedItems] = useState<T[]>([]);
@@ -99,25 +95,27 @@ export function useTableData<T>({
             setIsLoading(true);
             const now = Date.now();
 
-            const cached = await getCache(cacheKey, storeName);
+            const cached = await getCache<T>(cacheKey, storeName);
 
             if (cached && cached.timestamp && now - cached.timestamp < cacheExpiryMs) {
-                setAllItems(cached.data || []);
+                const items = Array.isArray(cached.data) ? cached.data : [];
+                setAllItems(items);
                 setLastUpdated(new Date(cached.timestamp).toLocaleString());
                 return;
             }
 
             const items = await fetchFunction();
+            const itemsArray = Array.isArray(items) ? items : [];
 
             await setCache(cacheKey, {
-                data: items,
+                data: itemsArray,
                 timestamp: now
             }, storeName);
 
-            setAllItems(items);
+            setAllItems(itemsArray);
             setLastUpdated(new Date().toLocaleString());
         } catch (error) {
-            console.error('Ошибка загрузки данных:', error);
+            console.error('Error loading data:', error);
         } finally {
             setIsLoading(false);
         }
@@ -137,7 +135,7 @@ export function useTableData<T>({
             setPage(0);
             setLastUpdated(new Date().toLocaleString());
         } catch (error) {
-            console.error('Ошибка обновления данных:', error);
+            console.error('Error refreshing data:', error);
         } finally {
             setIsLoading(false);
         }

@@ -11,38 +11,47 @@ import TableStatus from '@/components/TableStatus/TableStatus';
 const CACHE_KEY = 'wb_sales_cache';
 const CACHE_EXPIRY_MS = 30 * 60 * 1000;
 
-const SaleRow = memo(({ sale }: { sale: Sale }) => (
-    <tr>
-        <td>{sale.date}</td>
-        <td>{sale.lastChangeDate}</td>
-        <td>{sale.warehouseName}</td>
-        <td>{sale.warehouseType}</td>
-        <td>{sale.countryName}</td>
-        <td>{sale.oblastOkrugName}</td>
-        <td>{sale.regionName}</td>
-        <td>{sale.supplierArticle}</td>
-        <td>{sale.nmId}</td>
-        <td>{sale.barcode}</td>
-        <td>{sale.category}</td>
-        <td>{sale.subject}</td>
-        <td>{sale.brand}</td>
-        <td>{sale.techSize}</td>
-        <td>{sale.incomeID}</td>
-        <td>{sale.isSupply ? 'Да' : 'Нет'}</td>
-        <td>{sale.isRealization ? 'Да' : 'Нет'}</td>
-        <td>{sale.totalPrice} ₽</td>
-        <td>{sale.discountPercent} %</td>
-        <td>{sale.spp} ₽</td>
-        <td>{sale.paymentSaleAmount} ₽</td>
-        <td>{sale.forPay} ₽</td>
-        <td>{sale.finishedPrice} ₽</td>
-        <td>{sale.priceWithDisc} ₽</td>
-        <td>{sale.saleID}</td>
-        <td>{sale.sticker}</td>
-        <td>{sale.gNumber}</td>
-        <td>{sale.srid}</td>
-    </tr>
-));
+const SaleRow = memo(({ sale }: { sale: Sale }) => {
+    try {
+        JSON.stringify(sale);
+        return (
+            <tr>
+                <td>{sale.date}</td>
+                <td>{sale.lastChangeDate}</td>
+                <td>{sale.warehouseName}</td>
+                <td>{sale.warehouseType}</td>
+                <td>{sale.countryName}</td>
+                <td>{sale.oblastOkrugName}</td>
+                <td>{sale.regionName}</td>
+                <td>{sale.supplierArticle}</td>
+                <td>{sale.nmId}</td>
+                <td>{sale.barcode}</td>
+                <td>{sale.category}</td>
+                <td>{sale.subject}</td>
+                <td>{sale.brand}</td>
+                <td>{sale.techSize}</td>
+                <td>{sale.incomeID}</td>
+                <td>{sale.isSupply ? 'Да' : 'Нет'}</td>
+                <td>{sale.isRealization ? 'Да' : 'Нет'}</td>
+                <td>{sale.totalPrice} ₽</td>
+                <td>{sale.discountPercent} %</td>
+                <td>{sale.spp} ₽</td>
+                <td>{sale.paymentSaleAmount} ₽</td>
+                <td>{sale.forPay} ₽</td>
+                <td>{sale.finishedPrice} ₽</td>
+                <td>{sale.priceWithDisc} ₽</td>
+                <td>{sale.saleID}</td>
+                <td>{sale.sticker}</td>
+                <td>{sale.gNumber}</td>
+                <td>{sale.srid}</td>
+            </tr>
+        )
+    }
+    catch (error) {
+        console.error('Failed to render sale row due to:', error);
+        return null;
+    }
+});
 
 SaleRow.displayName = 'SaleRow';
 
@@ -103,7 +112,7 @@ export default function SalesTable() {
     } = useTableData<Sale>({
         fetchFunction,
         cacheKey: CACHE_KEY,
-        storeName: 'orders',
+        storeName: 'sales',
         cacheExpiryMs: CACHE_EXPIRY_MS
     });
 
