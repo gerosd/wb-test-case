@@ -7,28 +7,33 @@ export const initDB = () => {
 
         request.onupgradeneeded = (event) => {
             const db = (event.target as IDBOpenDBRequest).result;
+
             if (!db.objectStoreNames.contains('orders')) {
                 db.createObjectStore('orders', { keyPath: 'cacheKey' });
+            }
+
+            if (!db.objectStoreNames.contains('sales')) {
+                db.createObjectStore('sales', { keyPath: 'cacheKey' });
             }
         };
     });
 };
 
-export const getCache = async (key: string) => {
+export const getCache = async (key: string, storeName: string = 'orders') => {
     try {
         const db = await initDB();
         return new Promise<any>((resolve, reject) => {
-            const transaction = db.transaction('orders', 'readonly');
-            const store = transaction.objectStore('orders');
+            const transaction = db.transaction(storeName, 'readonly');
+            const store = transaction.objectStore(storeName);
             const request = store.get(key);
 
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
                 const result = request.result;
                 if (result) {
-                    console.log('Cache hit:', key, 'Data length:', result.data?.length || 0);
+                    console.log(`Cache hit [${storeName}]:`, key, 'Data length:', result.data?.length || 0);
                 } else {
-                    console.log('Cache miss:', key);
+                    console.log(`Cache miss [${storeName}]:`, key);
                 }
                 resolve(result);
             };
@@ -39,20 +44,19 @@ export const getCache = async (key: string) => {
     }
 };
 
-export const setCache = async (key: string, data: any) => {
+export const setCache = async (key: string, data: any, storeName: string = 'orders') => {
     try {
         const db = await initDB();
         return new Promise<void>((resolve, reject) => {
-            const transaction = db.transaction('orders', 'readwrite');
-            const store = transaction.objectStore('orders');
+            const transaction = db.transaction(storeName, 'readwrite');
+            const store = transaction.objectStore(storeName);
 
-            // ✅ Правильная структура данных для кэша
             const cacheData = {
                 cacheKey: key,
-                ...data // Разворачиваем data, чтобы timestamp и data были на верхнем уровне
+                ...data
             };
 
-            console.log('Saving to cache:', key, 'Data length:', cacheData.data?.length || 0);
+            console.log(`Saving to cache [${storeName}]:`, key, 'Data length:', cacheData.data?.length || 0);
 
             const request = store.put(cacheData);
 
@@ -62,7 +66,7 @@ export const setCache = async (key: string, data: any) => {
             };
 
             transaction.oncomplete = () => {
-                console.log('Successfully saved to cache:', key);
+                console.log(`Successfully saved to cache [${storeName}]:`, key);
                 resolve();
             };
 

@@ -1,0 +1,35 @@
+.status {
+    text-align: center;
+    padding: 1.5rem;
+    color: #666;
+    background-color: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+}
+
+.loading {
+    width: 100%;
+    padding: 16px;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.noResults {
+    color: #dc3545;
+    font-style: italic;
+}
+
+.noData {
+    color: #6c757d;
+    font-style: italic;
+}
+
+.summary {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+.totalCount {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
