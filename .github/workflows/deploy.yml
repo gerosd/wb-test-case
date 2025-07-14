@@ -2,7 +2,7 @@ name: Build and Push Docker Image
 
 on:
   push:
-    branches: [main]
+    branches: [master]
 
 jobs:
   build-and-push:
@@ -23,5 +23,5 @@ jobs:
           context: .
           push: true
           tags:
-            ${{ secrets.DOCKER_USERNAME }}/my-next-app:latest
-            ${{ secrets.DOCKER_USERNAME }}/my-next-app:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/wb-test-case:latest
+            ${{ secrets.DOCKER_USERNAME }}/wb-test-case:${{ github.sha }}
