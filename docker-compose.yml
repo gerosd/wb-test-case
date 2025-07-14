@@ -1,0 +1,7 @@
+name: wb-test-case
+services:
+  app:
+    image: gerosd/wb-test-case:latest
+    env_file: .env
+    ports:
+      - "3000:3000"

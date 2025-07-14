@@ -8,6 +8,7 @@
 body {
     display: flex;
     background: var(--background-color);
+    height: 100vh;
 }
 
 * {
