@@ -10,7 +10,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@types/pg": "^8.15.4",
     "next": "15.3.5",
+    "pg": "^8.16.3",
+    "pg-hstore": "^2.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-virtualized-auto-sizer": "^1.0.26",

@@ -18,8 +18,6 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/node_modules ./node_modules
 
-ENV NEXT_PUBLIC_API_URL=https://statistics-api.wildberries.ru/api/v1/supplier
-
 EXPOSE 3000
 
 CMD ["npm", "start"]

@@ -1,11 +1,11 @@
 'use client'
 import React, { memo, useCallback } from 'react';
-import { fetchSales } from '@/lib/api/wbSales';
 import { Sale } from "@/lib/types/sales";
 import { useTableData } from '@/hooks/useTableData';
 import TableWrapper from '@/components/TableWrapper/TableWrapper';
 import TableControls from '@/components/TableControls/TableControls';
 import TableStatus from '@/components/TableStatus/TableStatus';
+import { getSales } from '@/actions/getSales';
 
 const CACHE_KEY = 'wb_sales_cache';
 const CACHE_EXPIRY_MS = 30 * 60 * 1000;
@@ -18,20 +18,14 @@ const SaleRow = memo(({ sale }: { sale: Sale }) => {
                 <td>{sale.date}</td>
                 <td>{sale.lastChangeDate}</td>
                 <td>{sale.warehouseName}</td>
-                <td>{sale.warehouseType}</td>
                 <td>{sale.countryName}</td>
-                <td>{sale.oblastOkrugName}</td>
                 <td>{sale.regionName}</td>
                 <td>{sale.supplierArticle}</td>
-                <td>{sale.nmId}</td>
+                <td><a href={`https://www.wildberries.ru/catalog/${sale.nmId}/detail.aspx`} target="_blank">{sale.nmId}</a></td>
                 <td>{sale.barcode}</td>
-                <td>{sale.category}</td>
                 <td>{sale.subject}</td>
                 <td>{sale.brand}</td>
-                <td>{sale.techSize}</td>
                 <td>{sale.incomeID}</td>
-                <td>{sale.isSupply ? 'Да' : 'Нет'}</td>
-                <td>{sale.isRealization ? 'Да' : 'Нет'}</td>
                 <td>{sale.totalPrice} ₽</td>
                 <td>{sale.discountPercent} %</td>
                 <td>{sale.spp} ₽</td>
@@ -60,20 +54,14 @@ const TableHeader = memo(() => (
         <th>Дата</th>
         <th>Дата обновления</th>
         <th>Склад отгрузки</th>
-        <th>Тип склада</th>
         <th>Страна</th>
-        <th>Округ</th>
         <th>Регион</th>
         <th>Артикул продавца</th>
         <th>Артикул WB</th>
         <th>Баркод</th>
-        <th>Категория</th>
         <th>Предмет</th>
         <th>Бренд</th>
-        <th>Размер товара</th>
         <th>Номер поставки</th>
-        <th>Договор поставки</th>
-        <th>Договор реализации</th>
         <th>Цена без скидок</th>
         <th>Скидка продавца</th>
         <th>Скидка WB</th>
@@ -93,7 +81,12 @@ TableHeader.displayName = 'TableHeader';
 
 export default function SalesTable() {
     const fetchFunction = useCallback(async () => {
-        return await fetchSales(new Date(Date.now() - 80 * 24 * 60 * 1000).toISOString());
+        const response = await getSales(new Date(Date.now() - 80 * 24 * 60 * 1000).toISOString());
+        if (response.error) {
+            console.error(response.error);
+            return [];
+        }
+        return response.data || [];
     }, []);
 
     const {

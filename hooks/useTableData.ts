@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { getCache, setCache } from '@/lib/db';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { getCacheData, setCacheData } from '@/actions/cacheActions';
 
 export interface UseTableDataOptions<T> {
     fetchFunction: () => Promise<T[]>;
@@ -8,6 +8,8 @@ export interface UseTableDataOptions<T> {
     cacheExpiryMs?: number;
     pageSize?: number;
     filterFunction?: (items: T[], query: string) => T[];
+    loadMoreFunction?: () => Promise<T[]>;
+    hasMoreCheck?: (newItems: T[]) => boolean;
 }
 
 export interface UseTableDataReturn<T> {
@@ -40,22 +42,26 @@ const defaultFilterFunction = <T,>(items: T[], query: string): T[] => {
 };
 
 export function useTableData<T>({
-                                    fetchFunction,
-                                    cacheKey,
-                                    storeName,
-                                    cacheExpiryMs = 30 * 60 * 1000,
-                                    pageSize = 50,
-                                    filterFunction = defaultFilterFunction
-                                }: UseTableDataOptions<T>): UseTableDataReturn<T> {
+    fetchFunction,
+    cacheKey,
+    storeName,
+    cacheExpiryMs = 30 * 60 * 1000,
+    pageSize = 50,
+    filterFunction = defaultFilterFunction,
+    loadMoreFunction,
+    hasMoreCheck
+}: UseTableDataOptions<T>): UseTableDataReturn<T> {
     const [allItems, setAllItems] = useState<T[]>([]);
     const [filteredItems, setFilteredItems] = useState<T[]>([]);
     const [displayedItems, setDisplayedItems] = useState<T[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
     const [hasMore, setHasMore] = useState<boolean>(true);
     const [page, setPage] = useState<number>(0);
     const [lastUpdated, setLastUpdated] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [debouncedQuery, setDebouncedQuery] = useState<string>('');
+    const isInitialMount = useRef(true);
+    const isLoadingMore = useRef(false);
 
     useEffect(() => {
         const handler = setTimeout(() => {
@@ -68,38 +74,28 @@ export function useTableData<T>({
     }, [searchQuery]);
 
     useEffect(() => {
-        if (allItems.length > 0) {
-            const filtered = filterFunction(allItems, debouncedQuery);
-            setFilteredItems(filtered);
-            setPage(0);
-        } else {
-            setFilteredItems([]);
-            setPage(0);
-        }
-    }, [allItems, debouncedQuery, filterFunction]);
+        const filtered = filterFunction(allItems, debouncedQuery);
+        setFilteredItems(filtered);
+        setPage(0);
+        setHasMore(filtered.length > pageSize);
+    }, [allItems, debouncedQuery, filterFunction, pageSize]);
 
     useEffect(() => {
-        if (filteredItems.length > 0) {
-            const endIndex = (page + 1) * pageSize;
-            const newItems = filteredItems.slice(0, endIndex);
-            setDisplayedItems(newItems);
-            setHasMore(endIndex < filteredItems.length);
-        } else {
-            setDisplayedItems([]);
-            setHasMore(false);
-        }
-    }, [page, filteredItems, pageSize]);
+        const endIndex = (page + 1) * pageSize;
+        const newItems = filteredItems.slice(0, endIndex);
+        setDisplayedItems(newItems);
+        setHasMore(Boolean(endIndex < filteredItems.length || (loadMoreFunction && !isLoadingMore.current)));
+    }, [page, filteredItems, pageSize, loadMoreFunction]);
 
     const loadData = useCallback(async () => {
         try {
             setIsLoading(true);
             const now = Date.now();
 
-            const cached = await getCache<T>(cacheKey, storeName);
+            const cached = await getCacheData<T[]>(cacheKey, storeName);
 
             if (cached && cached.timestamp && now - cached.timestamp < cacheExpiryMs) {
-                const items = Array.isArray(cached.data) ? cached.data : [];
-                setAllItems(items);
+                setAllItems(cached.data);
                 setLastUpdated(new Date(cached.timestamp).toLocaleString());
                 return;
             }
@@ -107,7 +103,7 @@ export function useTableData<T>({
             const items = await fetchFunction();
             const itemsArray = Array.isArray(items) ? items : [];
 
-            await setCache(cacheKey, {
+            await setCacheData(cacheKey, {
                 data: itemsArray,
                 timestamp: now
             }, storeName);
@@ -125,13 +121,14 @@ export function useTableData<T>({
         try {
             setIsLoading(true);
             const items = await fetchFunction();
+            const itemsArray = Array.isArray(items) ? items : [];
 
-            await setCache(cacheKey, {
-                data: items,
+            await setCacheData(cacheKey, {
+                data: itemsArray,
                 timestamp: Date.now()
             }, storeName);
 
-            setAllItems(items);
+            setAllItems(itemsArray);
             setPage(0);
             setLastUpdated(new Date().toLocaleString());
         } catch (error) {
@@ -141,23 +138,50 @@ export function useTableData<T>({
         }
     }, [fetchFunction, cacheKey, storeName]);
 
-    const loadMoreData = useCallback(() => {
-        if (!isLoading && hasMore) {
-            setPage(prev => prev + 1);
+    const loadMoreData = useCallback(async () => {
+        if (!isLoading && hasMore && !isLoadingMore.current) {
+            if (loadMoreFunction) {
+                try {
+                    isLoadingMore.current = true;
+                    setIsLoading(true);
+                    const newItems = await loadMoreFunction();
+                    if (Array.isArray(newItems) && newItems.length > 0) {
+                        setAllItems(prev => [...prev, ...newItems]);
+                        if (hasMoreCheck) {
+                            setHasMore(hasMoreCheck(newItems));
+                        } else {
+                            setHasMore(newItems.length === pageSize);
+                        }
+                    } else {
+                        setHasMore(false);
+                    }
+                } catch (error) {
+                    console.error('Error loading more data:', error);
+                    setHasMore(false);
+                } finally {
+                    setIsLoading(false);
+                    isLoadingMore.current = false;
+                }
+            } else {
+                setPage(prev => prev + 1);
+            }
         }
-    }, [isLoading, hasMore]);
+    }, [isLoading, hasMore, loadMoreFunction, pageSize, hasMoreCheck]);
 
     const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
         const isNearBottom = scrollHeight - (scrollTop + clientHeight) < 100;
 
-        if (isNearBottom && !isLoading && hasMore && filteredItems.length > 0) {
+        if (isNearBottom && !isLoading && hasMore && !isLoadingMore.current) {
             loadMoreData();
         }
-    }, [isLoading, hasMore, filteredItems.length, loadMoreData]);
+    }, [isLoading, hasMore, loadMoreData]);
 
     useEffect(() => {
-        loadData();
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            loadData();
+        }
     }, [loadData]);
 
     return {

@@ -22,6 +22,12 @@
     font-size: 14px;
 }
 
+.tableContainer table td a {
+    color: var(--text-color);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
 .tableContainer table th {
     position: sticky;
     top: 0;
