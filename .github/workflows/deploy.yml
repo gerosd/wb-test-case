@@ -22,6 +22,6 @@ jobs:
         with:
           context: .
           push: true
-          tags:
+          tags: |
             ${{ secrets.DOCKER_USERNAME }}/wb-test-case:latest
             ${{ secrets.DOCKER_USERNAME }}/wb-test-case:${{ github.sha }}
