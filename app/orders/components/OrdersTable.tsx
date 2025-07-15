@@ -6,6 +6,7 @@ import TableWrapper from '@/components/TableWrapper/TableWrapper';
 import TableControls from '@/components/TableControls/TableControls';
 import TableStatus from '@/components/TableStatus/TableStatus';
 import { getOrders } from '@/actions/getOrders';
+import OrderStats from './OrderStats';
 
 const CACHE_KEY = 'wb_orders_cache';
 const CACHE_EXPIRY_MS = 30 * 60 * 1000;
@@ -100,6 +101,7 @@ export default function OrdersTable() {
     return (
         <TableWrapper onScroll={handleScroll}>
             <h1 style={{textAlign: "center"}}>Таблица заказов</h1>
+            <OrderStats orders={allOrders} />
             <TableControls
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}

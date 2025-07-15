@@ -58,18 +58,3 @@ export const setCache = async <T>(
         client.release();
     }
 };
-
-export const clearOldCache = async (maxAgeMs: number): Promise<void> => {
-    const client = await pool.connect();
-    try {
-        const cutoffTime = Date.now() - maxAgeMs;
-        await client.query(
-            'DELETE FROM cache WHERE timestamp < $1',
-            [cutoffTime]
-        );
-    } catch (error) {
-        console.error('Error clearing old cache:', error);
-    } finally {
-        client.release();
-    }
-}; 

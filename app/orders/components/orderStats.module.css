@@ -1,0 +1,24 @@
+.orderStatsWrapper {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: var(--background-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.orderStatsWrapper h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.orderStatsWrapper h3 {
+    margin: 0 0 0.5rem 0;
+}
+
+.orderStatsContainer {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    text-align: center;
+}
