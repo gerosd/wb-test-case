@@ -7,7 +7,7 @@ interface OrderStatsProps {
     orders: Order[];
 }
 
-const OrderStats: React.FC<OrderStatsProps> = ({ orders }) => {
+const OrderStats = ({ orders }: OrderStatsProps) => {
     const stats = useMemo(() => {
         const total = orders.length;
         const cancelled = orders.filter(order => order.isCancel).length;

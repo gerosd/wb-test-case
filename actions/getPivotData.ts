@@ -23,53 +23,55 @@ export async function getPivotData(startDate: string): Promise<{
             getSales(startDate)
         ]);
 
-        if (ordersResponse.error) {
-            return { data: [], error: `Orders error: ${ordersResponse.error}` };
-        }
-
-        if (salesResponse.error) {
-            return { data: [], error: `Sales error: ${salesResponse.error}` };
+        if (ordersResponse.error || salesResponse.error) {
+            return {
+                data: [],
+                error: [
+                    ordersResponse.error && `Orders: ${ordersResponse.error}`,
+                    salesResponse.error && `Sales: ${salesResponse.error}`
+                ].filter(Boolean).join('; ')
+            };
         }
 
         const pivotMap = new Map<number, PivotItem>();
 
-        ordersResponse.data?.forEach(order => {
-            if (!pivotMap.has(order.nmId)) {
-                pivotMap.set(order.nmId, {
-                    nmId: order.nmId,
-                    barcode: order.barcode,
-                    subject: order.subject,
-                    sticker: order.sticker,
-                    forPay: 0,
-                    totalSales: 0,
-                    totalRevenue: 0
-                });
-            }
+        ordersResponse.data?.forEach(({ nmId, barcode, subject, sticker }) => {
+            pivotMap.set(nmId, {
+                nmId,
+                barcode,
+                subject,
+                sticker,
+                forPay: 0,
+                totalSales: 0,
+                totalRevenue: 0
+            });
         });
 
-        salesResponse.data?.forEach(sale => {
-            const item = pivotMap.get(sale.nmId);
-            if (item) {
-                item.forPay = sale.forPay;
-                item.totalSales++;
-                item.totalRevenue += sale.forPay;
+        salesResponse.data?.forEach(({ nmId, barcode, subject, sticker, forPay }) => {
+            const existingItem = pivotMap.get(nmId);
+            const amount = forPay || 0;
+
+            if (existingItem) {
+                existingItem.forPay = amount;
+                existingItem.totalSales += 1;
+                existingItem.totalRevenue += amount;
             } else {
-                pivotMap.set(sale.nmId, {
-                    nmId: sale.nmId,
-                    barcode: sale.barcode,
-                    subject: sale.subject,
-                    sticker: sale.sticker,
-                    forPay: sale.forPay,
+                pivotMap.set(nmId, {
+                    nmId,
+                    barcode: barcode || '',
+                    subject: subject || '',
+                    sticker: sticker || '',
+                    forPay: amount,
                     totalSales: 1,
-                    totalRevenue: sale.forPay
+                    totalRevenue: amount
                 });
             }
         });
 
-        return {
-            data: Array.from(pivotMap.values())
-                .sort((a, b) => b.totalRevenue - a.totalRevenue)
-        };
+        const sortedData = Array.from(pivotMap.values())
+            .sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+        return { data: sortedData };
     } catch (error) {
         console.error('Failed to fetch pivot data:', error);
         return {
@@ -77,4 +79,4 @@ export async function getPivotData(startDate: string): Promise<{
             error: error instanceof Error ? error.message : 'Failed to fetch pivot data'
         };
     }
-} 
+}

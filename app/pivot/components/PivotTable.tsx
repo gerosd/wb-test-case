@@ -134,7 +134,7 @@ export default function PivotTable() {
 
     return (
         <TableWrapper onScroll={handleScroll}>
-            <h1 style={{textAlign: "center"}}>Выручка</h1>
+            <h1 style={{textAlign: "center"}}>Сводная таблица заказов и продаж</h1>
             <TableControls
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
