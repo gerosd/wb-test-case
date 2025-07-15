@@ -34,7 +34,7 @@ const OrderStats: React.FC<OrderStatsProps> = ({ orders }) => {
                     <p style={{ fontSize: '1.5rem', margin: 0 }}>{stats.total}</p>
                 </div>
                 <div>
-                    <h3 style={{ color: '#4CAF50' }}>Заказы</h3>
+                    <h3 style={{ color: '#4CAF50' }}>Успешные заказы</h3>
                     <p style={{ fontSize: '1.5rem', margin: 0, color: '#4CAF50' }}>
                         {stats.active} ({stats.activePercentage}%)
                     </p>
